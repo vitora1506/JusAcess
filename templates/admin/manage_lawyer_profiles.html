@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block content %}
+{# Título e Descrição #}
+<h1 class="mb-4"><i class="bi bi-briefcase-fill me-2"></i>Gerenciar Perfis de Advogado</h1>
+<p class="text-muted">Crie, edite ou exclua os perfis de advogados/escritórios. Depois, vincule uma conta de usuário <strong class="text-info">Advogado</strong> (aprovada e não vinculada) a um perfil.</p>
+
+{# 1. Formulário para Criar Novo Perfil de Advogado (WTForms) #}
+<div class="card mb-4">
+    <div class="card-header">
+        <h5><i class="bi bi-folder-plus me-1"></i> Criar Novo Perfil de Advogado/Escritório</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('add_lawyer_profile') }}" class="row g-3 align-items-end" novalidate>
+             {{ lawyer_form.hidden_tag() }} {# CSRF #}
+             <div class="col-md-8">
+                 {{ lawyer_form.name.label(class="form-label") }}
+                 {% if lawyer_form.name.errors %}
+                     {{ lawyer_form.name(class="form-control is-invalid", placeholder="Nome completo ou nome do escritório") }}
+                     <div class="invalid-feedback d-block">
+                         {% for error in lawyer_form.name.errors %}<span>{{ error }}</span>{% endfor %}
+                     </div>
+                 {% else %}
+                      {{ lawyer_form.name(class="form-control", placeholder="Nome completo ou nome do escritório") }}
+                 {% endif %}
+             </div>
+             <div class="col-md-4 d-grid">
+                 {# Botão Criar (Submit do WTForms) #}
+                 {{ lawyer_form.submit(class="btn btn-success", value="Criar Novo Perfil") }} {# Texto customizado #}
+             </div>
+        </form>
+    </div>
+</div>
+
+<hr>
+
+{# 2. Lista de Perfis de Advogados Existentes #}
+<h3 class="mb-3">Perfis Cadastrados</h3>
+{% if lawyers %}
+    <div class="list-group mb-4 shadow-sm"> {# Adicionado shadow #}
+        {% for lawyer in lawyers %}
+        <div class="list-group-item" id="lawyer-{{lawyer.id}}"> {# Sem hover state aqui #}
+            <div class="d-flex w-100 justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                {# Informações do Perfil e Vínculos #}
+                <div>
+                    <h5 class="mb-1">{{ lawyer.name }}</h5>
+                    {# Info Usuário Advogado Vinculado #}
+                    <div class="mb-1">
+                        <small class="text-muted d-inline-block me-2 align-middle">
+                            {% if lawyer.user_account %}
+                                <i class="bi bi-person-check-fill text-success me-1" title="Usuário Advogado Vinculado"></i> Vinculado a:
+                                <a href="{{ url_for('manage_users') }}">{{ lawyer.user_account.username }}</a>
+                            {% else %}
+                                <i class="bi bi-person-x-fill text-warning me-1" title="Nenhum Usuário Advogado Vinculado"></i> Não vinculado
+                            {% endif %}
+                        </small>
+                        {# Botão/Form Desvincular (só aparece se vinculado) #}
+                        {% if lawyer.user_account %}
+                        <form action="{{ url_for('unlink_user_from_lawyer', lawyer_id=lawyer.id) }}" method="POST" class="d-inline"
+                              onsubmit="return confirm('Desvincular o usuário \'{{ lawyer.user_account.username }}\' deste perfil?')">
+                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/> {# CSRF #}
+                             <button type="submit" class="btn btn-xs btn-warning" title="Desvincular usuário">
+                                <i class="bi bi-x-lg"></i> Desvincular
+                             </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                    {# Info Assessores Associados #}
+                    <div>
+                        <small class="text-muted d-block">
+                            <i class="bi bi-people me-1" title="Assessores Associados"></i> Assessores:
+                            {% set assessores = lawyer.assessores.all() %} {# Executa a query dynamic #}
+                            {% if assessores %}
+                                {{ assessores|map(attribute='username')|join(', ') }}
+                            {% else %}
+                                Nenhum
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+
+                {# Botões de Ação para o Perfil #}
+                <div class="btn-group btn-group-sm" role="group">
+                    {# Botão Ver Dados (Define contexto na sessão via POST) #}
+                    <form method="POST" action="{{ url_for('select_lawyer_profile_for_gestor', lawyer_id=lawyer.id) }}" class="d-inline">
+                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/> {# CSRF #}
+                         {# Estilo muda se for o perfil selecionado na sessão #}
+                         <button type="submit" class="btn btn-sm {% if session.get('selected_lawyer_id')|string == lawyer.id|string %}btn-primary{% else %}btn-outline-primary{% endif %}" title="Visualizar dados de {{ lawyer.name }}">
+                             <i class="bi bi-eye-fill"></i> Ver Dados
+                         </button>
+                    </form>
+                    {# Botão Editar Perfil (Abre Modal) #}
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#editLawyerProfileModal-{{ lawyer.id }}" title="Editar nome do perfil {{ lawyer.name }}">
+                        <i class="bi bi-pencil-fill"></i> Editar
+                    </button>
+                    {# Botão Excluir Perfil (Abre Modal) - Desabilitado se não puder excluir #}
+                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteLawyerProfileModal-{{ lawyer.id }}" title="Excluir perfil {{ lawyer.name }}"
+                            {% if not lawyer.can_delete() %}disabled title="Não pode ser excluído (verifique clientes, processos, usuário ou assessores vinculados)"{% endif %}>
+                        <i class="bi bi-trash3-fill"></i> Excluir
+                    </button>
+                </div>
+            </div>{# Fim do flex container principal #}
+
+            {# Formulário para Vincular Usuário ADVOGADO (WTForms) - Só mostra se perfil não estiver vinculado #}
+            {% if not lawyer.user_account %}
+             <div class="mt-3 pt-3 border-top">
+                 <h6><i class="bi bi-link-45deg me-1"></i>Vincular Usuário Advogado Aprovado</h6>
+                 {# Só mostra o form se houver usuários disponíveis (além do placeholder) #}
+                 {% if link_form.user_id.choices|length > 1 %}
+                     <form method="POST" action="{{ url_for('link_user_to_lawyer', lawyer_id=lawyer.id) }}" class="row gx-2 gy-2 align-items-center" novalidate>
+                         {{ link_form.hidden_tag() }} {# CSRF #}
+                         <div class="col-sm-8 col-md-7">
+                             {{ link_form.user_id.label(class="form-label visually-hidden") }} {# Esconde label visualmente #}
+                              {% if link_form.user_id.errors %}
+                                {{ link_form.user_id(class="form-select form-select-sm is-invalid") }}
+                                 <div class="invalid-feedback d-block">
+                                     {% for error in link_form.user_id.errors %}<span>{{ error }}</span>{% endfor %}
+                                 </div>
+                              {% else %}
+                                {{ link_form.user_id(class="form-select form-select-sm") }} {# Select menor #}
+                              {% endif %}
+                         </div>
+                         <div class="col-sm-4 col-md-5 d-grid">
+                             {# Botão Vincular (Submit do WTForms) #}
+                             {{ link_form.submit(class="btn btn-sm btn-info w-100") }} {# Botão Roxo/Info menor #}
+                         </div>
+                     </form>
+                {% else %}
+                    <p class="text-muted fst-italic mb-0"><small>Nenhum usuário <span class="badge bg-info">advogado</span> aprovado e disponível para vincular no momento.</small></p>
+                {% endif %}
+             </div>
+            {% endif %} {# Fim do if not lawyer.user_account #}
+
+        </div> {# Fim do list-group-item #}
+
+        {# --- Modal Editar Perfil (um para cada perfil) --- #}
+        <div class="modal fade" id="editLawyerProfileModal-{{ lawyer.id }}" tabindex="-1" aria-labelledby="editLawyerProfileModalLabel-{{ lawyer.id }}" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h1 class="modal-title fs-5" id="editLawyerProfileModalLabel-{{ lawyer.id }}"><i class="bi bi-pencil-fill me-2"></i>Editar Perfil: {{ lawyer.name }}</h1>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              {# Formulário reutiliza 'lawyer_form' (LawyerForm) #}
+              <form method="POST" action="{{ url_for('edit_lawyer_profile', lawyer_id=lawyer.id) }}" novalidate>
+                  {{ lawyer_form.hidden_tag() }} {# CSRF #}
+                  <div class="modal-body">
+                        <div class="mb-3">
+                            {{ lawyer_form.name.label("Nome do Advogado/Escritório", class="form-label") }}
+                            {# Preenche com valor atual #}
+                            {{ lawyer_form.name(class="form-control", value=lawyer.name) }}
+                            {# TODO: Idealmente, exibir erros específicos deste form/modal se houver #}
+                        </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i> Cancelar
+                    </button>
+                    {# Botão Salvar (Submit do WTForms) #}
+                     {{ lawyer_form.submit(class="btn btn-success", value="Salvar Alterações") }} {# Texto customizado #}
+                  </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        {# --- Modal Excluir Perfil (um para cada perfil) --- #}
+        <div class="modal fade" id="deleteLawyerProfileModal-{{ lawyer.id }}" tabindex="-1" aria-labelledby="deleteLawyerProfileModalLabel-{{ lawyer.id }}" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h1 class="modal-title fs-5 text-danger" id="deleteLawyerProfileModalLabel-{{ lawyer.id }}"><i class="bi bi-exclamation-triangle-fill me-2"></i>Confirmar Exclusão</h1>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                Tem certeza que deseja excluir o perfil de <strong>{{ lawyer.name }}</strong>?
+                <p class="small text-muted mt-2">Isto NÃO exclui a conta do usuário advogado vinculado (se houver), apenas o perfil. Clientes, processos ou assessores associados podem impedir a exclusão.</p>
+                <strong class="text-danger d-block mt-2">Atenção:</strong> Esta ação não pode ser desfeita!
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i> Cancelar
+                </button>
+                {# Formulário POST para exclusão #}
+                <form method="POST" action="{{ url_for('delete_lawyer_profile', lawyer_id=lawyer.id) }}">
+                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/> {# CSRF #}
+                     <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash3-fill me-1"></i> Excluir Perfil
+                    </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %} {# Fim do loop for lawyer #}
+    </div> {# Fim do list-group #}
+{% else %}
+    <div class="alert alert-info">Nenhum perfil de advogado cadastrado ainda. Use o formulário acima para criar.</div>
+{% endif %} {# Fim do if lawyers #}
+
+{% endblock %}

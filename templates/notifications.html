@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1><i class="bi bi-list-task me-2"></i>Notificações Pendentes</h1>
+    {# Pode adicionar um contador aqui se quiser: <span class="badge bg-danger rounded-pill">{{ notifications|length }}</span> #}
+</div>
+<p class="text-muted">Lista de notificações publicadas pelos advogados que você ainda não marcou como lidas.</p>
+<hr>
+
+{% if notifications %}
+<div class="list-group shadow-sm">
+    {% for notification in notifications %}
+    <div class="list-group-item list-group-item-action py-3"> {# Aumenta um pouco o padding vertical #}
+        <div class="d-flex w-100 justify-content-between mb-1">
+            <h5 class="mb-1 h6"> {# Título menor #}
+                 <i class="bi bi-person-badge me-1"></i>
+                 {{ notification.creator_lawyer.name if notification.creator_lawyer else "Sistema" }}
+            </h5>
+            <small class="text-muted" title="{{ notification.created_at.strftime('%d/%m/%Y %H:%M:%S') if notification.created_at else '' }}">
+                {{ notification.created_at.strftime('%d/%m/%y %H:%M') if notification.created_at else '?' }}
+            </small>
+        </div>
+        {# Mostra a mensagem completa aqui, mantendo quebras de linha #}
+        <p class="mb-2 card-text" style="white-space: pre-wrap;">{{ notification.message }}</p>
+        <div class="d-flex justify-content-end gap-2 mt-2">
+            {# Link para ver o detalhe (também marca como lido ao carregar a página de detalhe) #}
+             <a href="{{ url_for('notification_detail', notification_id=notification.id) }}" class="btn btn-sm btn-outline-secondary">
+                 <i class="bi bi-eye"></i> Ver Detalhe
+             </a>
+             {# Botão para marcar como lido diretamente (ação POST) #}
+             <form action="{{ url_for('mark_notification_read', notification_id=notification.id) }}" method="POST" class="d-inline">
+                 <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}"/>
+                 <button type="submit" class="btn btn-sm btn-success"> {# Botão verde para dar baixa #}
+                     <i class="bi bi-check-lg"></i> Marcar como Lida
+                 </button>
+             </form>
+        </div>
+    </div>
+    {% endfor %} {# Fim do loop de notificações #}
+</div> {# Fim do list-group #}
+{% else %}
+<div class="alert alert-success text-center" role="alert">
+  <h4 class="alert-heading"><i class="bi bi-check-all me-2"></i>Tudo em ordem!</h4>
+  <p>Nenhuma notificação pendente para você no momento.</p>
+</div>
+{% endif %} {# Fim do if notifications #}
+
+{% endblock %}

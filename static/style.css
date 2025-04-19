@@ -1,0 +1,290 @@
+/* static/style.css */
+
+/* --- Configurações Globais --- */
+html {
+    height: 100%;
+}
+body {
+    font-family: 'Lato', sans-serif;
+    font-size: 1.0rem; /* Ajustado para 1rem padrão */
+    color: #e9ecef; /* Cor de texto padrão clara */
+    padding-top: 5rem; /* Espaço para navbar fixa */
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Garante altura mínima para sticky footer */
+    background-color: #2a2133; /* Fundo principal roxo escuro */
+}
+
+main.container {
+    flex-grow: 1; /* Faz o conteúdo principal crescer para empurrar o footer */
+    padding-bottom: 2rem; /* Espaçamento inferior */
+}
+
+/* --- Elementos com Fundo ESCURO SÓLIDO (Cards, Modals, etc.) --- */
+.card,
+.list-group-item,
+.modal-content,
+.alert {
+    background-color: #212529; /* Fundo padrão escuro para containers */
+    border: 1px solid rgba(255, 255, 255, 0.12); /* Borda sutil */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    margin-bottom: 1.5rem;
+    color: #e9ecef; /* Garante texto claro dentro desses containers */
+}
+/* Ajustes para List Group dentro de card/isolado */
+.list-group-item { border-left: none; border-right: none; border-radius: 0; }
+.list-group-item:first-child { border-top-left-radius: var(--bs-card-inner-border-radius, 0.375rem); border-top-right-radius: var(--bs-card-inner-border-radius, 0.375rem); border-top: none; }
+.list-group-item:last-child { border-bottom-left-radius: var(--bs-card-inner-border-radius, 0.375rem); border-bottom-right-radius: var(--bs-card-inner-border-radius, 0.375rem); margin-bottom: 0; border-bottom: none; }
+/* Garante herança de cor dentro dos containers */
+.card *, .list-group-item *, .modal-content *, .alert * { color: inherit; text-shadow: none; }
+
+/* --- Fontes e Títulos --- */
+h1, h2, h3, h4, h5, h6 { font-family: 'Poppins', sans-serif; font-weight: 600; }
+/* Títulos principais na página (fora de cards/modals) */
+main.container > h1, main.container > h2, main.container > h3, main.container > h4, main.container > h5, main.container > h6,
+h1.text-body-emphasis, h2.text-body-emphasis, h3.text-body-emphasis, h4.text-body-emphasis, h5.text-body-emphasis, h6.text-body-emphasis { color: #ffffff !important; text-shadow: 0px 1px 4px rgba(0, 0, 0, 0.6); }
+main.container > h1 > i, main.container > h2 > i, main.container > h3 > i, main.container > h4 > i, main.container > h5 > i, main.container > h6 > i,
+h1.text-body-emphasis > i, h2.text-body-emphasis > i, h3.text-body-emphasis > i, h4.text-body-emphasis > i, h5.text-body-emphasis > i, h6.text-body-emphasis > i { color: inherit !important; opacity: 0.9; }
+/* Títulos dentro de cards/modals */
+.card h1, .card h2, .card h3, .card h4, .card h5, .card h6,
+.modal-content h1, .modal-content h2, .modal-content h3, .modal-content h4, .modal-content h5, .modal-content h6,
+.alert h1, .alert h2, .alert h3, .alert h4, .alert h5, .alert h6 { color: #ffffff; font-weight: 600; }
+/* Parágrafos */
+main.container p { color: #dee2e6 !important; line-height: 1.6; } /* Texto um pouco menos brilhante que branco */
+strong { color: inherit; font-weight: 700; }
+
+/* --- Text Color Utilities (Ajustadas para Tema Escuro) --- */
+/* Prioriza cores mais vibrantes ou claras no tema escuro */
+.text-success { color: #20c997 !important; } /* Verde claro */
+.text-danger { color: #f75c6b !important; }  /* Vermelho claro */
+.text-warning { color: #ffc107 !important; } /* Amarelo */
+.text-info { color: #6f42c1 !important; font-weight: 700; } /* Roxo (ajustado da cor do botão info) */
+.text-primary { color: #58a6ff !important; } /* Azul claro */
+.text-light { color: #f8f9fa !important; }  /* Quase branco */
+.text-dark { color: #dee2e6 !important; }   /* Cinza claro */
+.text-body { color: #e9ecef !important; }   /* Padrão claro */
+.text-muted, small, .small, .form-text { color: #adb5bd !important; } /* Cinza */
+.text-white { color: #fff !important; }
+.text-black { color: #dee2e6 !important; } /* Ajustado para não ser preto */
+/* Links dentro de texto colorido */
+.text-success a, .text-danger a, .text-warning a, .text-info a, .text-primary a { color: inherit !important; text-decoration: underline !important; font-weight: bold; }
+
+/* --- Links --- */
+a { color: #58a6ff; text-decoration: none; font-weight: 500; }
+a:hover { color: #80bfff; text-decoration: underline; }
+/* Links dentro de componentes escuros */
+.card a, .list-group-item a, .modal-body a, .modal-footer a, .card-footer a, .alert a { color: #58a6ff; }
+.card a:hover, .list-group-item a:hover, .modal-body a:hover, .modal-footer a:hover, .card-footer a:hover, .alert a:hover { color: #80bfff; }
+/* Links dentro de Alertas */
+.alert a { font-weight: bold; text-decoration: underline; color: inherit !important; } /* Herda cor do alerta */
+/* Links no Footer */
+footer a { color: #58a6ff; }
+footer a:hover { color: #80bfff; }
+/* Links na Navbar */
+.navbar a.nav-link, .navbar a.dropdown-item { color: rgba(255, 255, 255, 0.85); transition: color 0.2s ease; }
+.navbar a.nav-link:hover, .navbar a.nav-link.active { color: #ffc107 !important; } /* Amarelo no hover/active */
+.navbar a.dropdown-item:hover, .navbar a.dropdown-item:focus, .navbar a.dropdown-item.active { color: #1a1a1a; background-color: #ffc107; }
+.navbar a.navbar-brand { color: #ffc107 !important; font-family: 'Poppins', sans-serif; }
+
+/* --- Tabelas (Estilo Base Escuro - Revisado) --- */
+.table {
+    border: 1px solid rgba(255, 255, 255, 0.12); /* Borda sutil */
+    border-radius: 0.375rem; /* Cantos arredondados */
+    margin-bottom: 1.5rem;
+    border-collapse: separate; /* Necessário para border-radius */
+    border-spacing: 0;
+    width: 100%;
+    overflow: hidden; /* Ajuda com border-radius */
+    color: #e9ecef; /* Cor de texto padrão para células */
+    background-color: #212529; /* Cor de fundo padrão para células */
+}
+
+/* Estilo do Cabeçalho (thead) */
+.table thead th {
+    background-color: #32383e; /* Fundo do cabeçalho um pouco diferente */
+    color: #ffffff; /* Texto branco no cabeçalho */
+    font-weight: 600;
+    border-bottom-width: 2px !important; /* Linha inferior mais grossa */
+    border-color: rgba(255, 255, 255, 0.15) !important; /* Cor da borda */
+    border-top: none !important;
+    vertical-align: middle;
+    padding: 0.8rem;
+    text-shadow: none;
+}
+
+/* Estilo Padrão das Células (td) */
+.table tbody td {
+    border-color: rgba(255, 255, 255, 0.12); /* Cor da borda da célula */
+    vertical-align: middle;
+    padding: 0.8rem;
+    text-shadow: none;
+    /* Não forçar background-color ou color aqui com !important */
+    /* para permitir que .table-striped, .table-hover e .table-* funcionem */
+}
+
+/* Links dentro da tabela */
+.table a { color: #58a6ff !important; }
+.table a:hover { color: #80bfff !important; }
+
+/* Ajuste para Bootstrap Hover/Striped (Bootstrap 5 deve lidar bem com isso no tema escuro) */
+.table-hover tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.075) !important; /* Leve destaque no hover */
+    color: #ffffff !important; /* Garante texto claro no hover */
+}
+.table-striped tbody tr:nth-of-type(odd) {
+     background-color: rgba(255, 255, 255, 0.04) !important; /* Leve diferença para linhas listradas */
+}
+
+/* Arredondamento dos cantos da tabela */
+.table thead tr:first-child th:first-child { border-top-left-radius: calc(0.375rem - 1px); }
+.table thead tr:first-child th:last-child { border-top-right-radius: calc(0.375rem - 1px); }
+.table tbody tr:last-child td:first-child { border-bottom-left-radius: calc(0.375rem - 1px); }
+.table tbody tr:last-child td:last-child { border-bottom-right-radius: calc(0.375rem - 1px); }
+
+/* Ajuste input de data dentro da tabela (deadlines.html) */
+.table .input-group-sm .form-control-sm {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.8rem;
+}
+/* --- FIM ESTILO TABELAS --- */
+
+
+/* --- Barra de Navegação --- */
+.navbar { background-color: #161b22 !important; box-shadow: 0 2px 5px rgba(0,0,0,.3); border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+/* Dropdown Menu */
+.dropdown-menu { background-color: #212529 !important; border: 1px solid rgba(255, 255, 255, 0.15) !important; --bs-dropdown-link-color: #e9ecef !important; --bs-dropdown-link-hover-color: #000 !important; --bs-dropdown-link-hover-bg: #ffc107 !important; --bs-dropdown-link-active-color: #000 !important; --bs-dropdown-link-active-bg: #e0a800 !important; --bs-dropdown-header-color: #adb5bd !important; border-radius: 0.375rem; box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.175); }
+.dropdown-item i { color: inherit !important; opacity: 0.8; }
+.dropdown-item:hover i, .dropdown-item:focus i, .dropdown-item.active i { color: inherit !important; }
+/* Toggler */
+.navbar-toggler { border-color: rgba(255, 193, 7, 0.5); }
+.navbar-toggler-icon { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255, 193, 7, 0.8)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e"); }
+
+/* --- Rodapé --- */
+footer { background-color: #161b22; color: rgba(255, 255, 255, 0.7); padding: 1rem 0; border-top: 1px solid rgba(255, 255, 255, 0.1); margin-top: auto; }
+
+
+/* --- Botões Estilo Flat --- */
+.btn {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 500;
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: none;
+    border-radius: 0.3rem;
+    padding: 0.6rem 1.2rem;
+    box-shadow: none;
+    transition: background-color 0.15s ease-in-out, opacity 0.15s ease-in-out;
+    opacity: 0.95;
+    color: #ffffff !important; /* Cor de texto padrão para botões */
+}
+.btn:hover { opacity: 1; box-shadow: none; transform: none !important; }
+.btn:active { filter: brightness(95%); }
+/* Cores específicas */
+.btn-primary { background-color: #0d6efd; }
+.btn-primary:hover { background-color: #0b5ed7; }
+.btn-secondary { background-color: #6c757d; }
+.btn-secondary:hover { background-color: #5c636a; }
+.btn-success { background-color: #198754; }
+.btn-success:hover { background-color: #157347; }
+.btn-danger { background-color: #dc3545; }
+.btn-danger:hover { background-color: #bb2d3b; }
+.btn-warning { background-color: #fd7e14; } /* Laranja */
+.btn-warning:hover { background-color: #d96a0a; }
+.btn-info { background-color: #6f42c1; } /* Roxo */
+.btn-info:hover { background-color: #5a34a3; }
+.btn-light { background-color: #f8f9fa; color: #000 !important; } /* Texto preto em botão claro */
+.btn-light:hover { background-color: #e2e6ea; color: #000 !important;}
+.btn-dark { background-color: #343a40; }
+.btn-dark:hover { background-color: #23272b; }
+/* Botões Outline */
+.btn-outline-primary { border: 1px solid #0d6efd; color: #58a6ff !important; background-color: transparent;}
+.btn-outline-primary:hover { background-color: #0d6efd; color: #fff !important;}
+.btn-outline-secondary { border: 1px solid #6c757d; color: #adb5bd !important; background-color: transparent;}
+.btn-outline-secondary:hover { background-color: #6c757d; color: #fff !important;}
+.btn-outline-success { border: 1px solid #198754; color: #20c997 !important; background-color: transparent;}
+.btn-outline-success:hover { background-color: #198754; color: #fff !important;}
+.btn-outline-danger { border: 1px solid #dc3545; color: #f75c6b !important; background-color: transparent;}
+.btn-outline-danger:hover { background-color: #dc3545; color: #fff !important;}
+.btn-outline-warning { border: 1px solid #fd7e14; color: #ffc107 !important; background-color: transparent;}
+.btn-outline-warning:hover { background-color: #fd7e14; color: #fff !important;}
+.btn-outline-info { border: 1px solid #6f42c1; color: #a37eff !important; background-color: transparent;}
+.btn-outline-info:hover { background-color: #6f42c1; color: #fff !important;}
+.btn-outline-light { border: 1px solid #f8f9fa; color: #f8f9fa !important; background-color: transparent;}
+.btn-outline-light:hover { background-color: #f8f9fa; color: #000 !important;}
+.btn-outline-dark { border: 1px solid #343a40; color: #adb5bd !important; background-color: transparent;}
+.btn-outline-dark:hover { background-color: #343a40; color: #fff !important;}
+/* Botões Pequenos */
+.btn-xs { font-size: 0.75rem; padding: 0.3rem 0.6rem; text-transform: none; letter-spacing: 0; }
+
+
+/* --- Formulários --- */
+.form-control,
+.form-select {
+    font-family: 'Lato', sans-serif;
+    background-color: #2b3035 !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: #f8f9fa !important;
+    border-radius: 0.3rem;
+    padding: 0.5rem 0.8rem;
+    box-shadow: none !important;
+    transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+}
+.form-control:disabled,
+.form-control[readonly] {
+    background-color: rgba(73, 80, 87, 0.5) !important;
+    color: #adb5bd !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+.form-control::placeholder { color: rgba(248, 249, 250, 0.4) !important; }
+.form-control:focus,
+.form-select:focus {
+    background-color: #343a40 !important;
+    border-color: #58a6ff !important;
+    box-shadow: 0 0 0 0.2rem rgba(88, 166, 255, 0.25) !important;
+    color: #ffffff !important;
+}
+.form-label { font-family: 'Poppins', sans-serif; color: #f0f0f0 !important; font-weight: 500; font-size: 0.9rem; margin-bottom: 0.3rem; }
+/* Ícone do Select */
+.form-select { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23adb5bd' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important; }
+/* Opções do Select */
+select.form-select option { background: #212529; color: #f8f9fa; }
+/* Checkbox / Radio */
+.form-check-input { background-color: #495057; border-color: rgba(255, 255, 255, 0.25); }
+.form-check-input:checked { background-color: #0d6efd; border-color: #0d6efd; }
+.form-check-input:focus { border-color: #58a6ff; box-shadow: 0 0 0 0.25rem rgba(88, 166, 255, 0.25); }
+.form-check-label { color: #e9ecef; }
+
+
+/* --- Outros Ajustes --- */
+hr { border-color: rgba(255, 255, 255, 0.15); opacity: 0.5; }
+pre { background-color: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255,255,255,.1); color: #e0e0e0; font-family: 'Consolas', 'Monaco', monospace; font-size: 0.9em; border-radius: 0.3rem; padding: 0.8em; }
+/* Flash messages */
+.alert { opacity: 0.98; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); font-family: 'Lato', sans-serif; border-radius: 0.3rem;}
+/* Cores de fundo e texto dos alertas */
+.alert-success { background-color: #0a3622; color: #a3cfbb !important; border-color: #1a4d3a; }
+.alert-danger { background-color: #58151c; color: #f1b0b7 !important; border-color: #842029; }
+.alert-warning { background-color: #664d03; color: #ffecb5 !important; border-color: #997404; }
+.alert-info { background-color: #055160; color: #9eeaf9 !important; border-color: #066477; }
+.alert-light { background-color: #343a40; color: #f8f9fa !important; border-color: #495057; } /* Ajustado para tema escuro */
+.alert-dark { background-color: #161b22; color: #adb5bd !important; border-color: #343a40; } /* Ajustado para tema escuro */
+/* Badges */
+.badge { padding: 0.4em 0.7em; font-size: 0.8em; font-weight: 600; font-family: 'Poppins', sans-serif; border-radius: 0.3rem; letter-spacing: 0.5px; text-transform: uppercase;}
+.badge.bg-primary { background-color: #0d6efd !important; color: #fff !important; }
+.badge.bg-secondary { background-color: #6c757d !important; color: #fff !important; }
+.badge.bg-success { background-color: #198754 !important; color: #fff !important; }
+.badge.bg-danger { background-color: #dc3545 !important; color: #fff !important; }
+.badge.bg-warning { background-color: #fd7e14 !important; color: #fff !important; }
+.badge.bg-info { background-color: #6f42c1 !important; color: #fff !important; }
+.badge.bg-light { background-color: #adb5bd !important; color: #000 !important; } /* Cinza claro com texto preto */
+.badge.bg-dark { background-color: #343a40 !important; color: #fff !important; }
+
+/* Garante que texto em botões outline seja visível */
+.btn-outline-primary, .btn-outline-secondary, .btn-outline-success, .btn-outline-danger, .btn-outline-warning, .btn-outline-info, .btn-outline-light, .btn-outline-dark {
+     text-shadow: none !important;
+}
+
+/* Melhor contraste para botão de fechar em alertas/modals escuros */
+.btn-close-white { filter: invert(1) grayscale(100%) brightness(200%); }

@@ -1,0 +1,13 @@
+# requirements.txt
+# Recomenda-se pinar versões exatas (ex: Flask==2.3.0) para produção
+# usando `pip freeze > requirements.txt` após instalação.
+
+Flask>=2.0
+Flask-SQLAlchemy>=2.5
+Flask-Login
+Flask-Bcrypt
+Flask-WTF
+Email-Validator # Dependência do Flask-WTF para validação de Email
+python-dotenv   # Usado para carregar o arquivo .env
+gunicorn        # Servidor WSGI para produção (opcional para desenvolvimento)
+psycopg2-binary # ADICIONADO - Driver para PostgreSQL (AWS RDS)

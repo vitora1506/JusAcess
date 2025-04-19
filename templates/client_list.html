@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}Clientes Cadastrados{% endblock %}
+
+{% block content %}
+{# Cabeçalho com Título e Botão Adicionar #}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h1>Clientes Cadastrados</h1>
+    <a href="{{ url_for('add_client') }}" class="btn btn-success">
+        <i class="bi bi-plus-circle-fill me-1"></i> Cadastrar Novo Cliente
+    </a>
+</div>
+<hr>
+
+{# Verifica se existem clientes para exibir #}
+{% if clients %}
+{# Tabela Responsiva de Clientes #}
+<div class="table-responsive">
+    <table class="table table-striped table-hover align-middle">
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>CPF</th>
+                <th>Telefone</th>
+                <th>Email</th>
+                <th class="text-center" style="min-width: 180px;">Ações</th> {# Largura mínima para caber botões #}
+            </tr>
+        </thead>
+        <tbody>
+            {# Loop para exibir cada cliente #}
+            {% for client in clients %}
+            <tr>
+                <td>{{ client.name }}</td>
+                <td>{{ client.cpf }}</td>
+                <td>{{ client.phone if client.phone else '-' }}</td> {# Exibe '-' se nulo #}
+                <td>{{ client.email if client.email else '-' }}</td> {# Exibe '-' se nulo #}
+                {# Célula de Ações (Detalhes e Excluir) #}
+                <td class="text-center">
+                     <div class="d-flex justify-content-center gap-1 flex-wrap"> {# Flexbox para alinhar botões #}
+                        {# Botão Detalhes (Link GET) #}
+                        <a href="{{ url_for('client_detail', client_id=client.id) }}" class="btn btn-sm btn-primary" title="Ver Detalhes">
+                            <i class="bi bi-eye-fill"></i> Detalhes
+                        </a>
+
+                        {# Formulário para Excluir Cliente (Ação POST) #}
+                        <form action="{{ url_for('delete_client', client_id=client.id) }}" method="POST" class="d-inline"
+                              onsubmit="return confirm('ATENÇÃO!\\n\\nDeseja realmente EXCLUIR PERMANENTEMENTE o cliente \'{{ client.name }}\'?\\n\\nTODOS os processos, prazos e documentos associados a este cliente também serão APAGADOS!\\n\\nEsta ação NÃO PODE ser desfeita.');">
+                             {# Token CSRF OBRIGATÓRIO para segurança do POST #}
+                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                             <button type="submit" class="btn btn-sm btn-danger" title="Excluir Cliente {{ client.name }} e TODOS os seus dados">
+                                 <i class="bi bi-trash3-fill"></i> Excluir
+                             </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+{# Mensagem exibida se não houver clientes #}
+<div class="alert alert-info" role="alert">
+  Nenhum cliente cadastrado para {{ lawyer_name if lawyer_name else 'este advogado' }} ainda.
+  <a href="{{ url_for('add_client') }}" class="alert-link">Clique aqui para cadastrar o primeiro</a>.
+</div>
+{% endif %}
+
+{% endblock %}

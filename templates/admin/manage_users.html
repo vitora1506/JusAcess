@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block content %}
+{# Título e Descrição #}
+<h1 class="mb-4"><i class="bi bi-person-gear me-2"></i>Gerenciar Usuários</h1>
+<p class="text-muted">Aprovar/desaprovar acesso, alterar papel, gerenciar associações de assessores e excluir usuários (não-gestores).</p>
+
+<div class="table-responsive">
+    <table class="table table-striped table-hover align-middle">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Usuário</th>
+                <th>Email</th>
+                <th>Papel</th>
+                <th class="text-center">Aprovado?</th>
+                <th>Vinculado a (Perfil Adv.)</th>
+                <th>Assiste Advogados (Acessor)</th>
+                <th style="min-width: 200px;">Ações</th> {# Largura mínima para botões #}
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.id }}</td>
+                <td>{{ user.username }}</td>
+                <td>{{ user.email }}</td>
+                <td>
+                    {# Badge colorido indicando o papel #}
+                    <span class="badge {% if user.is_gestor %}bg-primary{% elif user.is_advogado %}bg-info{% elif user.is_acessor %}bg-light text-dark{% else %}bg-secondary{% endif %}">
+                        {{ user.role|capitalize }}
+                    </span>
+                </td>
+                <td class="text-center">
+                    {# Ícone indicando status de aprovação #}
+                    {% if user.is_approved %}
+                        <i class="bi bi-check-circle-fill text-success fs-5" title="Sim"></i>
+                    {% else %}
+                        <i class="bi bi-x-circle-fill text-danger fs-5" title="Não"></i>
+                    {% endif %}
+                </td>
+                <td> {# Perfil advogado vinculado #}
+                    {% if user.is_advogado %}
+                        {% if user.lawyer_profile %}
+                            <a href="{{ url_for('manage_lawyer_profiles') }}#lawyer-{{user.lawyer_profile.id}}" title="Ver perfil">{{ user.lawyer_profile.name }}</a>
+                        {% else %}
+                            <span class="text-warning fst-italic">Não vinculado</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="text-muted">-</span>
+                    {% endif %}
+                </td>
+                 <td> {# Advogados assistidos pelo acessor #}
+                    {% if user.is_acessor %}
+                        {% set assisted_count = user.lawyers_assisted.count() %}
+                        {% if assisted_count > 0 %}
+                             {# Link para página de gerenciamento de associações #}
+                             <a href="{{ url_for('manage_acessor_assignments', user_id=user.id) }}" class="badge bg-secondary text-decoration-none" title="Gerenciar associações">
+                                {{ assisted_count }} advogado(s)
+                             </a>
+                        {% else %}
+                            <a href="{{ url_for('manage_acessor_assignments', user_id=user.id) }}" class="badge bg-warning text-decoration-none text-dark" title="Gerenciar associações">
+                                Nenhum associado
+                            </a>
+                        {% endif %}
+                    {% else %}
+                        <span class="text-muted">-</span>
+                    {% endif %}
+                </td>
+                <td> {# Ações do Gestor #}
+                  <div class="d-flex align-items-center gap-1 flex-wrap justify-content-start">
+                    {# Não permitir ações em outros gestores #}
+                    {% if not user.is_gestor %}
+
+                        {# Botão Editar (Abre Modal) #}
+                         <button type="button" class="btn btn-xs btn-secondary" data-bs-toggle="modal" data-bs-target="#editUserModal-{{ user.id }}" title="Editar Papel/Aprovação">
+                             <i class="bi bi-pencil-square"></i>
+                         </button>
+
+                        {# Botões Aprovar/Desaprovar (Formulários POST) #}
+                        {% if user.is_approved %}
+                            {# Botão Desaprovar #}
+                            <form action="{{ url_for('disapprove_user', user_id=user.id) }}" method="POST" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/> {# CSRF #}
+                                <button type="submit" class="btn btn-xs btn-warning" title="Desaprovar Acesso">
+                                    <i class="bi bi-hand-thumbs-down-fill"></i>
+                                </button>
+                            </form>
+                        {% else %}
+                             {# Botão Aprovar #}
+                            <form action="{{ url_for('approve_user', user_id=user.id) }}" method="POST" class="d-inline">
+                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/> {# CSRF #}
+                                <button type="submit" class="btn btn-xs btn-success" title="Aprovar Acesso">
+                                    <i class="bi bi-hand-thumbs-up-fill"></i>
+                                </button>
+                            </form>
+                        {% endif %}
+
+                        {# Link/Botão Gerenciar Associações (Acessor) #}
+                        {% if user.is_acessor %}
+                             <a href="{{ url_for('manage_acessor_assignments', user_id=user.id) }}" class="btn btn-xs btn-info" title="Associar Advogados">
+                                 <i class="bi bi-link-45deg"></i>
+                             </a>
+                        {% endif %}
+
+                        {# Botão Excluir Usuário (Formulário POST) #}
+                        <form action="{{ url_for('delete_user', user_id=user.id) }}" method="POST" class="d-inline"
+                              onsubmit="return confirm('Tem certeza que deseja EXCLUIR PERMANENTEMENTE o usuário \'{{ user.username }}\'? Todas as associações serão removidas. Esta ação não pode ser desfeita!');">
+                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/> {# CSRF #}
+                             <button type="submit" class="btn btn-xs btn-danger" title="Excluir Usuário {{ user.username }}">
+                                 <i class="bi bi-trash3-fill"></i>
+                             </button>
+                        </form>
+
+                    {% else %}
+                         <span class="text-muted fst-italic">(Gestor)</span>
+                    {% endif %} {# Fim do if not gestor #}
+                   </div> {# Fim do d-flex #}
+                </td>
+            </tr>
+
+            {# --- Modal de Edição (um para cada usuário não-gestor) --- #}
+             {% if not user.is_gestor %}
+             <div class="modal fade" id="editUserModal-{{ user.id }}" tabindex="-1" aria-labelledby="editUserModalLabel-{{ user.id }}" aria-hidden="true">
+               <div class="modal-dialog">
+                 <div class="modal-content">
+                   <div class="modal-header">
+                     <h1 class="modal-title fs-5" id="editUserModalLabel-{{ user.id }}">
+                        <i class="bi bi-pencil-square me-2"></i>Editar Usuário: {{ user.username }}
+                     </h1>
+                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                   </div>
+                   {# Formulário usa o objeto 'form' (EditUserForm) passado pelo contexto da rota manage_users #}
+                   <form method="POST" action="{{ url_for('manage_users') }}" novalidate>
+                       {{ form.hidden_tag() }} {# CSRF do WTForm #}
+                       {# Identifica qual usuário está sendo editado #}
+                       <input type="hidden" name="user_id_to_edit" value="{{ user.id }}">
+                       {# Flag opcional para identificar submit de edição no backend #}
+                       {# <input type="hidden" name="edit_user_submit" value="1"> #}
+
+                       <div class="modal-body">
+                             {# Campo Papel #}
+                             <div class="mb-3">
+                                 {{ form.role.label(class="form-label") }}
+                                 {# Define o valor selecionado com base no usuário atual #}
+                                 {{ form.role(class="form-select", value=user.role) }}
+                                 {# Mostra erro SÓ se for deste usuário específico #}
+                                 {% if form.role.errors and request.form.get('user_id_to_edit') == user.id|string %}
+                                    <div class="invalid-feedback d-block">{% for error in form.role.errors %}<span>{{ error }}</span>{% endfor %}</div>
+                                 {% endif %}
+                                 <div class="form-text">Mudar papel pode desvincular associações existentes.</div>
+                             </div>
+                             {# Campo Aprovado #}
+                              <div class="mb-3">
+                                 {{ form.is_approved.label(class="form-label") }}
+                                 {# Define o valor selecionado com base no usuário atual (convertido para int 0/1) #}
+                                 {{ form.is_approved(class="form-select", value=user.is_approved|int) }}
+                                 {# Mostra erro SÓ se for deste usuário específico #}
+                                 {% if form.is_approved.errors and request.form.get('user_id_to_edit') == user.id|string %}
+                                    <div class="invalid-feedback d-block">{% for error in form.is_approved.errors %}<span>{{ error }}</span>{% endfor %}</div>
+                                 {% endif %}
+                             </div>
+                       </div>
+                       <div class="modal-footer">
+                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-1"></i> Cancelar
+                         </button>
+                         {# Botão submit do formulário WTForms #}
+                         {{ form.submit(class="btn btn-success") }} {# Renderiza o <input type=submit> do EditUserForm #}
+                       </div>
+                   </form> {# FIM DO FORMULARIO DO MODAL #}
+                 </div>
+               </div>
+             </div>
+             {% endif %} {# Fim do if not gestor para modal #}
+            {% endfor %} {# Fim do loop for user #}
+        </tbody>
+    </table>
+</div>
+{# Mensagem se não houver outros usuários #}
+{% if not users or (users|length == 1 and current_user in users) %}
+    <p class="text-center text-muted mt-3">Nenhum outro usuário encontrado.</p>
+{% endif %}
+
+{% endblock %} {# Fim do block content #}

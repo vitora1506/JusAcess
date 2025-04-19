@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{# Define o título da página #}
+{% block title %}Detalhe Notificação #{{ notification.id }}{% endblock %}
+
+{% block content %}
+{# Breadcrumb para navegação contextual #}
+<nav aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('home') }}">Início</a></li>
+    <li class="breadcrumb-item"><a href="{{ url_for('notifications') }}">Notificações Pendentes</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Detalhe #{{ notification.id }}</li>
+  </ol>
+</nav>
+
+<h1 class="mb-4 display-6">Detalhe da Notificação</h1>
+
+{# Card para exibir a notificação #}
+<div class="card shadow-sm border-secondary">
+    <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center flex-wrap gap-1"> {# Reduzido gap #}
+         <span class="me-2">
+             <i class="bi bi-person-badge me-2"></i>
+             Enviada por: <strong>{{ notification.creator_lawyer.name if notification.creator_lawyer else "Sistema" }}</strong>
+         </span>
+         <small class="text-nowrap" title="{{ notification.created_at.strftime('%d/%m/%Y %H:%M:%S') if notification.created_at else '' }}">
+             {{ notification.created_at.strftime('%d/%m/%Y %H:%M') if notification.created_at else 'Data indisponível' }}
+         </small>
+    </div>
+    <div class="card-body">
+        {# Usa <pre> para manter a formatação original da mensagem #}
+        <pre class="card-text bg-dark text-light p-3 rounded">{{ notification.message }}</pre>
+    </div>
+    {# Rodapé com botões de ação #}
+    <div class="card-footer text-end d-flex justify-content-between align-items-center flex-wrap gap-2">
+        {# Formulário POST para Marcar como NÃO LIDO #}
+        <form action="{{ url_for('mark_notification_unread', notification_id=notification.id) }}" method="POST" class="d-inline">
+             {# CSRF Token OBRIGATÓRIO #}
+             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+             <button type="submit" class="btn btn-sm btn-warning">
+                 <i class="bi bi-arrow-counterclockwise"></i> Marcar como Não Lida
+             </button>
+         </form>
+
+         {# Agrupa botões da direita #}
+         <span>
+             {# Formulário POST para Confirmar Leitura (ação explícita) #}
+             <form action="{{ url_for('mark_notification_read', notification_id=notification.id) }}" method="POST" class="d-inline me-2">
+                  {# CSRF Token OBRIGATÓRIO #}
+                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                 <button type="submit" class="btn btn-sm btn-success">
+                     <i class="bi bi-check-lg"></i> Confirmar Leitura
+                 </button>
+             </form>
+            {# Link GET para voltar para a lista #}
+            <a href="{{ url_for('notifications') }}" class="btn btn-sm btn-secondary">
+                 <i class="bi bi-list-task me-1"></i> Voltar para Pendentes
+             </a>
+         </span>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Processos Arquivados{% endblock %}
+
+{% block content %}
+{# Título e Descrição #}
+<h1><i class="bi bi-archive-fill me-2"></i> Processos Arquivados</h1>
+<p class="text-muted">Lista de processos marcados como 'Arquivado' para {{ lawyer_name if lawyer_name else 'este advogado' }}.</p>
+<hr>
+
+{# Verifica se há processos arquivados #}
+{% if processes %}
+<div class="table-responsive">
+    <table class="table table-striped table-hover align-middle">
+        <thead>
+            <tr>
+                <th>Cliente</th>
+                <th>Nº Processo</th>
+                <th>Descrição</th>
+                <th class="text-center" style="width: 25%;">Ações</th> {# Largura definida para Ações #}
+            </tr>
+        </thead>
+        <tbody>
+            {% for process in processes %}
+            <tr>
+                <td>
+                    {# Link para o cliente #}
+                    <a href="{{ url_for('client_detail', client_id=process.client_id) }}" title="Ver cliente {{ process.client.name }}">
+                        <i class="bi bi-person-fill me-1"></i> {{ process.client.name }}
+                    </a>
+                </td>
+                <td>{{ process.case_number if process.case_number else '-' }}</td>
+                <td>{{ process.description }}</td>
+                {# Célula de Ações #}
+                <td class="text-center d-flex justify-content-center align-items-center gap-2 flex-wrap">
+
+                    {# Botão Ver no Cliente (Link GET) #}
+                    <a href="{{ url_for('client_detail', client_id=process.client_id) }}#processos-pane" class="btn btn-sm btn-primary" title="Ver detalhes no cliente">
+                        <i class="bi bi-folder2-open"></i> Ver no Cliente
+                    </a>
+
+                     {# Formulário para Reativar Processo (Ação POST) #}
+                     <form action="{{ url_for('reactivate_process', process_id=process.id) }}" method="POST" class="d-inline-block" onsubmit="return confirm('Tem certeza que deseja REATIVAR este processo? Ele voltará para a lista de processos ativos do cliente.');">
+                         {# CSRF Token ADICIONADO - ESSENCIAL #}
+                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                         <button type="submit" class="btn btn-sm btn-success" title="Reativar Processo">
+                             <i class="bi bi-arrow-counterclockwise"></i> Reativar
+                         </button>
+                     </form>
+
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+{# Mensagem se não houver processos arquivados #}
+ <div class="alert alert-info text-center" role="alert">
+    <h4 class="alert-heading"><i class="bi bi-info-circle me-1"></i> Informação</h4>
+   <p class="mb-0">Nenhum processo arquivado para {{ lawyer_name if lawyer_name else 'este advogado' }} ainda.</p>
+ </div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-header text-center">
+                <h2><i class="bi bi-briefcase-fill me-1"></i>Selecionar Advogado</h2>
+            </div>
+            <div class="card-body">
+                <p class="text-center">Você está associado a múltiplos advogados. Por favor, selecione qual deles você deseja acessar no momento.</p>
+                <form method="POST" action="{{ url_for('select_lawyer_for_acessor') }}">
+                     <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}"/>
+                     <div class="list-group">
+                         {% for lawyer in assisted_lawyers %}
+                             <label class="list-group-item list-group-item-action">
+                                 <input class="form-check-input me-2" type="radio" name="lawyer_id" value="{{ lawyer.id }}" id="lawyer_{{ lawyer.id }}" required>
+                                 {{ lawyer.name }}
+                             </label>
+                         {% endfor %}
+                     </div>
+                     <div class="d-grid mt-4">
+                         <button type="submit" class="btn btn-primary btn-lg">Acessar Dados</button>
+                     </div>
+                </form>
+            </div>
+            <div class="card-footer text-center">
+                 <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-secondary">Sair</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

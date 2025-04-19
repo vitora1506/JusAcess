@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{# Define o título da página dinamicamente com o nome do advogado do contexto #}
+{% block title %}{% if lawyer_name %}Painel - {{ lawyer_name }}{% else %}Painel{% endif %}{% endblock %}
+
+{% block content %}
+    {# Bloco de Título e Introdução #}
+    <div class="px-4 py-5 mb-5 text-center rounded-3">
+        <h1 class="display-5 fw-bold text-body-emphasis"><i class="bi bi-speedometer2 me-2"></i>Painel de Controle</h1>
+         {% if lawyer_name %}
+            <h2 class="text-muted mb-4">Advogado: {{ lawyer_name }}</h2>
+         {% else %}
+             <h2 class="text-muted mb-4">Visão Geral</h2> {# Caso genérico, embora não deva ocorrer no fluxo normal #}
+         {% endif %}
+
+        {# Container para Ações Principais #}
+        <div class="col-lg-10 col-xl-9 mx-auto">
+            <p class="lead mb-4">Acesse as funcionalidades principais abaixo:</p>
+            {# Grid Responsivo para Botões de Ação #}
+            <div class="row justify-content-center g-3 mb-4 text-center">
+                <div class="col-12 col-sm-6 col-md-5 col-lg-3">
+                    <a href="{{ url_for('add_client') }}" class="btn btn-success w-100">
+                        <i class="bi bi-person-plus-fill me-2"></i>Novo Cliente
+                    </a>
+                </div>
+                <div class="col-12 col-sm-6 col-md-5 col-lg-3">
+                    <a href="{{ url_for('client_list') }}" class="btn btn-primary w-100">
+                        <i class="bi bi-people-fill me-2"></i>Ver Clientes
+                    </a>
+                </div>
+                <div class="col-12 col-sm-6 col-md-5 col-lg-3">
+                    <a href="{{ url_for('deadlines') }}" class="btn btn-warning w-100">
+                        <i class="bi bi-calendar-check-fill me-2"></i>Ver Prazos
+                    </a>
+                </div>
+                <div class="col-12 col-sm-6 col-md-5 col-lg-3">
+                    <a href="{{ url_for('archived_processes') }}" class="btn btn-secondary w-100">
+                        <i class="bi bi-archive-fill me-2"></i>Ver Arquivados
+                    </a>
+                </div>
+            </div>
+             {# FIM Ações Principais #}
+        </div>
+
+         {# Seção de Notificação (Exclusiva para Advogado) #}
+         {% if current_user.is_advogado and notification_form %} {# Verifica papel e se form existe #}
+            <hr class="my-4">
+             <div class="col-lg-7 mx-auto text-start">
+                <h4 class="mb-3 text-center">
+                    <i class="bi bi-megaphone-fill me-2"></i>Publicar Notificação
+                </h4>
+                <p class="text-muted small text-center mb-3">Envie uma mensagem curta para os assessores e gestor.</p>
+                 {# Formulário de Notificação (WTForms) #}
+                 <form method="POST" action="{{ url_for('create_notification') }}" novalidate>
+                      {{ notification_form.hidden_tag() }} {# CSRF token #}
+                      <div class="mb-3">
+                           {{ notification_form.message.label(class="form-label") }}
+                           {% if notification_form.message.errors %}
+                                {{ notification_form.message(class="form-control is-invalid", rows=3, placeholder="Digite seu recado aqui...") }}
+                                 <div class="invalid-feedback d-block">
+                                    {% for error in notification_form.message.errors %}<span>{{ error }}</span>{% endfor %}
+                                 </div>
+                           {% else %}
+                                 {{ notification_form.message(class="form-control", rows=3, placeholder="Digite seu recado aqui...") }}
+                           {% endif %}
+                      </div>
+                      <div class="text-center">
+                        <button type="submit" class="btn btn-info"> {# Botão Roxo/Info #}
+                            <i class="bi bi-send me-1"></i> Publicar
+                        </button>
+                      </div>
+                 </form>
+             </div>
+         {% endif %} {# Fim do if current_user.is_advogado #}
+
+    </div> {# Fim do container de introdução/ações #}
+
+    {# Cards de Resumo com Contadores #}
+    <div class="row justify-content-center g-3">
+        <div class="col-md-5 col-lg-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-people-fill me-2"></i> Clientes Ativos</h5>
+                    <p class="display-5 fw-bold mb-2">{{ client_count }}</p> {# Variável do contexto #}
+                    <a href="{{ url_for('client_list') }}" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-list-ul me-1"></i>Ver Lista
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-5 col-lg-4">
+             <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-calendar-check-fill me-2"></i> Prazos Abertos</h5>
+                    <p class="display-5 fw-bold mb-2">{{ open_deadlines_count }}</p> {# Variável do contexto #}
+                    <a href="{{ url_for('deadlines') }}" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-list-task me-1"></i>Ver Prazos
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div> {# Fim da row dos cards de contadores #}
+
+{% endblock %}

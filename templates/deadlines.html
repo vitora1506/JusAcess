@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block title %}Prazos em Aberto{% endblock %}
+
+{% block content %}
+{# Título e Descrição #}
+<h1><i class="bi bi-calendar-check-fill me-2"></i> Prazos em Aberto / Prorrogados</h1>
+<p class="text-muted">Lista de prazos com status 'Aberto' ou 'Prorrogado'. Prazos vencidos em <span class="badge bg-danger">vermelho</span>, prazos para hoje em <span class="badge bg-warning text-dark">laranja</span>.</p> {# Ajuste badge warning #}
+<hr>
+
+{# Verifica se há prazos para exibir #}
+{% if deadlines %}
+<div class="table-responsive">
+    <table class="table table-hover align-middle table-striped">
+        <thead>
+            <tr>
+                <th scope="col" style="width: 10%;">Vencimento</th>
+                <th scope="col">Descrição</th>
+                <th scope="col" class="text-center" style="width: 8%;">Status</th> {# Centralizado #}
+                <th scope="col">Processo</th>
+                <th scope="col">Cliente</th>
+                <th scope="col" style="width: 25%;">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for deadline in deadlines %}
+            {# Define a classe da linha baseado na data e status para destaque visual #}
+            {% set row_class = '' %}
+            {% if deadline.status == 'open' and deadline.due_date < today %}
+                {% set row_class = 'table-danger' %} {# Vencido #}
+            {% elif deadline.status == 'open' and deadline.due_date == today %}
+                {% set row_class = 'table-warning' %} {# Vence Hoje #}
+            {% elif deadline.status == 'extended' %}
+                 {% set row_class = 'table-info' %} {# Prorrogado #}
+            {% endif %}
+
+            <tr class="{{ row_class }}">
+                <td><strong>{{ deadline.due_date.strftime('%d/%m/%Y') }}</strong></td>
+                <td>{{ deadline.description }}</td>
+                <td class="text-center"> {# Status centralizado #}
+                    <span class="badge rounded-pill
+                    {% if deadline.status == 'open' and deadline.due_date < today %} bg-danger
+                    {% elif deadline.status == 'open' and deadline.due_date == today %} bg-warning text-dark {# Texto escuro para contraste #}
+                    {% elif deadline.status == 'extended' %} bg-info
+                    {% else %} bg-secondary {% endif %}">
+                        {{ deadline.status|capitalize }}
+                    </span>
+                </td>
+                <td>
+                    {# Link para o processo na página do cliente #}
+                    <a href="{{ url_for('client_detail', client_id=deadline.process.client_id) }}#processos-pane" title="Ver processo #{{ deadline.process.id }} do cliente {{ deadline.process.client.name }}">
+                        <i class="bi bi-folder2-open me-1"></i>
+                        #{{ deadline.process.id }} {% if deadline.process.case_number %}({{ deadline.process.case_number }}){% endif %}
+                    </a>
+                </td>
+                 <td>
+                    {# Link para a página do cliente #}
+                    <a href="{{ url_for('client_detail', client_id=deadline.process.client_id) }}" title="Ver detalhes do cliente {{ deadline.process.client.name }}">
+                       <i class="bi bi-person-fill me-1"></i> {{ deadline.process.client.name }}
+                    </a>
+                 </td>
+                <td> {# Coluna de Ações #}
+                    <div class="d-flex align-items-center gap-2 flex-nowrap">
+
+                         {# Form para Baixar (Completar) Prazo - POST #}
+                         <form action="{{ url_for('complete_deadline', deadline_id=deadline.id) }}" method="POST" class="d-inline-block" onsubmit="return confirm('Marcar este prazo como concluído?')">
+                             {# CSRF Token ADICIONADO - ESSENCIAL #}
+                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                             <button type="submit" class="btn btn-xs btn-success" title="Baixar Prazo (Concluído)">
+                                 <i class="bi bi-check-circle-fill"></i>
+                             </button>
+                         </form>
+
+                         {# Form para Prorrogar Prazo - POST #}
+                         <form action="{{ url_for('extend_deadline', deadline_id=deadline.id) }}" method="POST" class="d-inline-block flex-grow-1">
+                             {# CSRF Token ADICIONADO - ESSENCIAL #}
+                              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                             <div class="input-group input-group-sm">
+                                 <input type="date" name="new_due_date" class="form-control form-control-sm" required title="Selecione a nova data para prorrogar">
+                                 <button type="submit" class="btn btn-xs btn-warning" title="Prorrogar Prazo">
+                                     <i class="bi bi-clock-history"></i>
+                                 </button>
+                             </div>
+                         </form>
+
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+{# Mensagem se não houver prazos abertos #}
+<div class="alert alert-success text-center" role="alert">
+  <h4 class="alert-heading"><i class="bi bi-trophy-fill me-2"></i> Parabéns!</h4>
+  <p class="mb-0">Nenhum prazo em aberto ou prorrogado para {{ lawyer_name if lawyer_name else 'este advogado' }} no momento.</p>
+</div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block title %}Cadastrar Novo Cliente{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Cadastrar Novo Cliente</h1>
+<hr>
+
+{# Formulário HTML manual para adicionar cliente #}
+{# method="POST" e action corretos. classes Bootstrap para validação. #}
+<form method="POST" action="{{ url_for('add_client') }}" class="needs-validation" novalidate>
+    {# Renderiza MANUALMENTE o campo hidden CSRF - ESSENCIAL #}
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+    <div class="row g-3">
+        {# Linha 1: Nome e CPF (Obrigatórios) #}
+        <div class="col-md-6">
+            <label for="name" class="form-label">Nome Completo <span class="text-danger">*</span></label>
+            {# Repopula valor com form_data se existir (em caso de erro de validação backend) #}
+            <input type="text" class="form-control" id="name" name="name" value="{{ form_data.name if form_data else '' }}" required>
+            <div class="invalid-feedback">Por favor, insira o nome completo.</div>
+        </div>
+        <div class="col-md-6">
+            <label for="cpf" class="form-label">CPF <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="cpf" name="cpf" placeholder="000.000.000-00" value="{{ form_data.cpf if form_data else '' }}" required>
+             <div class="invalid-feedback">Por favor, insira um CPF válido.</div>
+        </div>
+
+        {# Linha 2: Telefone e Email (Opcionais) #}
+        <div class="col-md-6">
+            <label for="phone" class="form-label">Telefone</label>
+            <input type="tel" class="form-control" id="phone" name="phone" placeholder="(00) 90000-0000" value="{{ form_data.phone if form_data else '' }}">
+        </div>
+         <div class="col-md-6">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" class="form-control" id="email" name="email" placeholder="cliente@email.com" value="{{ form_data.email if form_data else '' }}">
+        </div>
+
+        {# Linha 3: Endereço (Opcional) #}
+        <div class="col-12">
+            <label for="address" class="form-label">Endereço</label>
+            <input type="text" class="form-control" id="address" name="address" placeholder="Rua Exemplo, 123, Bairro Centro, Cidade - UF, 00000-000" value="{{ form_data.address if form_data else '' }}">
+        </div>
+
+        {# Linha 4: RG e Profissão (Opcionais) #}
+         <div class="col-md-6">
+            <label for="rg" class="form-label">RG</label>
+            <input type="text" class="form-control" id="rg" name="rg" value="{{ form_data.rg if form_data else '' }}">
+        </div>
+        <div class="col-md-6">
+            <label for="profession" class="form-label">Profissão</label>
+            <input type="text" class="form-control" id="profession" name="profession" value="{{ form_data.profession if form_data else '' }}">
+        </div>
+
+        {# Linha 5: Outras Infos (Opcional) #}
+         <div class="col-12">
+            <label for="other_info" class="form-label">Outras Informações Pertinentes</label>
+            <textarea class="form-control" id="other_info" name="other_info" rows="3">{{ form_data.other_info if form_data else '' }}</textarea>
+        </div>
+
+         {# Linha 6: Link Documentos Iniciais (Opcional) #}
+        <div class="col-12">
+             <label for="document_link" class="form-label">Link para Pasta/Documentos (OneDrive, Google Drive, etc.)</label>
+             <input type="url" class="form-control" id="document_link" name="document_link" placeholder="https://onedrive.live.com/..." value="{{ form_data.document_link if form_data else '' }}">
+             <div class="form-text">Cole aqui o link compartilhável para a pasta principal de documentos do cliente (opcional).</div>
+         </div>
+    </div>
+
+    <hr class="my-4">
+
+    {# Botões de Ação #}
+    <div class="text-end">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary me-2">
+            <i class="bi bi-x-circle me-1"></i> Cancelar
+        </a>
+        <button type="submit" class="btn btn-success">
+            <i class="bi bi-save me-1"></i> Salvar Cliente
+        </button>
+    </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+{# Script JS para ativar os estilos de validação do Bootstrap #}
+<script>
+// IIFE to avoid polluting global scope
+(function () {
+  'use strict'
+  // Fetch all the forms we want to apply custom Bootstrap validation styles to
+  var forms = document.querySelectorAll('.needs-validation')
+  // Loop over them and prevent submission if invalid
+  Array.prototype.slice.call(forms)
+    .forEach(function (form) {
+      form.addEventListener('submit', function (event) {
+        if (!form.checkValidity()) {
+          event.preventDefault()
+          event.stopPropagation()
+        }
+        form.classList.add('was-validated')
+      }, false)
+    })
+})()
+</script>
+{% endblock %}

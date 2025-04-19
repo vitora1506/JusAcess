@@ -1,0 +1,290 @@
+<!doctype html>
+{# Tema escuro é definido via style.css #}
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    {# Título dinâmico da página #}
+    <title>{% if title %}{{ title }} - {% endif %}Acessoria Jurídica</title>
+
+    {# Google Fonts #}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    {# Bootstrap CSS e Icons (via CDN) #}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+    {# CSS Customizado (local) #}
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    {# Estilos Inline Mínimos Essenciais #}
+    <style>
+        /* Padding para compensar navbar fixa */
+        body {
+             padding-top: 5rem;
+        }
+        /* Posicionamento container flash messages */
+        .flash-message-container {
+            position: fixed;
+            top: 5rem; /* Abaixo da navbar */
+            right: 1rem;
+            z-index: 1051; /* Acima da maioria, abaixo de modais */
+            min-width: 300px;
+            max-width: 90%;
+        }
+        /* Posicionamento container toasts */
+        .toast-container {
+             z-index: 1100 !important; /* Acima de quase tudo */
+         }
+         /* Validação Bootstrap (pode ir para style.css também) */
+        .form-control.is-invalid, .form-select.is-invalid { border-color: var(--bs-danger); }
+        .invalid-feedback { display: none; width: 100%; margin-top: .25rem; font-size: .875em; color: var(--bs-danger); }
+        .form-control.is-invalid ~ .invalid-feedback, .form-select.is-invalid ~ .invalid-feedback { display: block; }
+        /* Scroll para dropdown de notificações */
+         .notifications-area {
+             max-height: 300px;
+             overflow-y: auto;
+             font-size: 0.9em;
+             min-width: 300px;
+         }
+    </style>
+</head>
+<body>
+    {# --- Barra de Navegação (Navbar) --- #}
+    <nav class="navbar navbar-expand-lg fixed-top shadow-sm"> {# Estilos vêm de style.css #}
+        <div class="container-fluid">
+            {# Marca/Logo #}
+            <a class="navbar-brand fw-bold" href="{{ url_for('home') }}">
+               <i class="bi bi-journal-bookmark-fill me-1"></i> Acessoria Jurídica
+            </a>
+            {# Botão Toggler para telas menores #}
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsMenu" aria-controls="navbarsMenu" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            {# Conteúdo Colapsável da Navbar #}
+            <div class="collapse navbar-collapse" id="navbarsMenu">
+                {# Menu Principal (Esquerda) - Condicional #}
+                {# Mostra em páginas principais se logado e com contexto de advogado ativo #}
+                {% set main_nav_endpoints = ['dashboard', 'add_client', 'client_list', 'client_detail', 'deadlines', 'archived_processes'] %}
+                {% if current_user.is_authenticated and request.endpoint in main_nav_endpoints %}
+                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item"><a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">Painel</a></li>
+                    {# Link Notificações Pendentes para Gestor/Acessor #}
+                    {% if current_user.is_gestor or current_user.is_acessor %}
+                        <li class="nav-item">
+                            <a class="nav-link position-relative {% if request.endpoint == 'notifications' %}active{% endif %}" href="{{ url_for('notifications') }}">
+                                Notificações
+                                {% if unread_notification_count > 0 %}
+                                    <span class="badge text-bg-danger rounded-pill ms-1">{{ unread_notification_count }}</span>
+                                {% endif %}
+                            </a>
+                        </li>
+                    {% endif %}
+                    <li class="nav-item"><a class="nav-link {% if request.endpoint == 'add_client' %}active{% endif %}" href="{{ url_for('add_client') }}">Novo Cliente</a></li>
+                    <li class="nav-item"><a class="nav-link {% if request.endpoint in ['client_list', 'client_detail'] %}active{% endif %}" href="{{ url_for('client_list') }}">Clientes</a></li>
+                    <li class="nav-item"><a class="nav-link {% if request.endpoint == 'deadlines' %}active{% endif %}" href="{{ url_for('deadlines') }}">Prazos</a></li>
+                    <li class="nav-item"><a class="nav-link {% if request.endpoint == 'archived_processes' %}active{% endif %}" href="{{ url_for('archived_processes') }}">Arquivados</a></li>
+                 </ul>
+                {# Mostra SÓ o link de Notificações em outras telas para Gestor/Acessor #}
+                {% elif current_user.is_authenticated and (current_user.is_gestor or current_user.is_acessor) and request.endpoint not in ['notifications', 'notification_detail'] + main_nav_endpoints %}
+                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                     <li class="nav-item"><a class="nav-link position-relative {% if request.endpoint == 'notifications' %}active{% endif %}" href="{{ url_for('notifications') }}">
+                         Notificações Pendentes
+                         {% if unread_notification_count > 0 %}
+                             <span class="badge text-bg-danger rounded-pill ms-1">{{ unread_notification_count }}</span>
+                         {% endif %}
+                         </a></li>
+                 </ul>
+                {% endif %} {# Fim do if/elif para menu principal #}
+
+
+                {# Menu da Direita #}
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center">
+                     {% if current_user.is_authenticated %}
+                         {# Dropdown de Notificações (Só Gestor/Acessor) #}
+                         {% if current_user.is_gestor or current_user.is_acessor %}
+                         <li class="nav-item dropdown">
+                             <a class="nav-link" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" title="Notificações Não Lidas">
+                                 <i class="bi bi-bell-fill position-relative fs-5">
+                                     {# Badge contador no ícone #}
+                                     {% if unread_notification_count > 0 %}
+                                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6em;">
+                                         {{ unread_notification_count if unread_notification_count < 10 else '9+' }} {# Mostra 9+ se for 10 ou mais #}
+                                         <span class="visually-hidden">novas notificações</span>
+                                     </span>
+                                     {% endif %}
+                                 </i>
+                             </a>
+                             {# Conteúdo do Dropdown #}
+                             <ul class="dropdown-menu dropdown-menu-end notifications-area">
+                                 <li><h6 class="dropdown-header">Últimas Não Lidas</h6></li>
+                                 {% if recent_unread_notifications_data %}
+                                     {% for notification_data in recent_unread_notifications_data %}
+                                        {% set dt_str = notification_data.created_at %}
+                                        {# Formatação simples da data #}
+                                        {% set simple_date = dt_str[:10] if dt_str else '?' %}
+                                        <li><a class="dropdown-item text-wrap" href="{{ url_for('notification_detail', notification_id=notification_data.id) }}" title="Por: {{ notification_data.creator_name }} em {{ simple_date }}">
+                                            <div class="fw-bold">{{ notification_data.creator_name.split(' ')[0] if notification_data.creator_name else 'Sistema' }} <small class="text-muted fw-normal">({{ simple_date }})</small></div>
+                                            {# Trunca a mensagem para caber melhor #}
+                                            <div class="small">{{ notification_data.message | truncate(80) }}</div>
+                                        </a></li>
+                                     {% endfor %}
+                                     <li><hr class="dropdown-divider"></li>
+                                     <li><a class="dropdown-item text-center {% if request.endpoint == 'notifications' %}active{% endif %}" href="{{ url_for('notifications') }}"><span class="text-muted">Ver Todas Pendentes</span></a></li>
+                                {% else %}
+                                     <li><p class="dropdown-item text-muted fst-italic mb-0">Nenhuma notificação pendente.</p></li>
+                                {% endif %}
+                             </ul>
+                         </li>
+                         {% endif %} {# Fim if gestor or acessor #}
+
+                         {# Dropdown do Usuário Logado #}
+                         <li class="nav-item dropdown">
+                              <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                 <i class="bi bi-person-circle me-1"></i> {{ current_user.username }}
+                                 {# Badges de Contexto #}
+                                 {% if current_user.is_advogado and current_user.lawyer_profile %}<span class="badge bg-info ms-1">{{ current_user.lawyer_profile.name }}</span>
+                                 {% elif current_user.is_acessor and 'selected_lawyer_name' in session %}<span class="badge bg-secondary ms-1" title="Assistente de">{{ session.get('selected_lawyer_name') }}</span>
+                                 {% elif current_user.is_gestor and 'selected_lawyer_name' in session %}<span class="badge bg-light text-dark ms-1" title="Visualizando como gestor">{{ session.get('selected_lawyer_name') }}</span>
+                                 {% endif %}
+                              </a>
+                              {# Conteúdo do Dropdown do Usuário #}
+                              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                {# Links do Gestor #}
+                                {% if current_user.is_gestor %}
+                                    <li><h6 class="dropdown-header">Administração</h6></li>
+                                    <li><a class="dropdown-item {% if request.endpoint == 'manage_users' %}active{% endif %}" href="{{ url_for('manage_users') }}"><i class="bi bi-person-gear me-2"></i>Gerenciar Usuários</a></li>
+                                    <li><a class="dropdown-item {% if request.endpoint == 'manage_lawyer_profiles' %}active{% endif %}" href="{{ url_for('manage_lawyer_profiles') }}"><i class="bi bi-briefcase-fill me-2"></i>Gerenciar Perfis Adv.</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                {# Link para Acessor trocar advogado (se assistir > 1) #}
+                                {% elif current_user.is_acessor and current_user.lawyers_assisted.count() > 1 %}
+                                     <li><a class="dropdown-item {% if request.endpoint == 'select_lawyer_for_acessor' %}active{% endif %}" href="{{ url_for('select_lawyer_for_acessor') }}"><i class="bi bi-arrow-left-right me-2"></i>Trocar Advogado</a></li>
+                                     <li><hr class="dropdown-divider"></li>
+                                {% endif %}
+                                {# Link Notificações Pendentes (Gestor/Acessor) #}
+                                {% if current_user.is_gestor or current_user.is_acessor %}
+                                     <li><a class="dropdown-item {% if request.endpoint == 'notifications' %}active{% endif %}" href="{{ url_for('notifications') }}">
+                                         <i class="bi bi-list-task me-2"></i>Notificações Pendentes
+                                         {% if unread_notification_count > 0 %}<span class="badge rounded-pill bg-danger ms-2">{{ unread_notification_count }}</span>{% endif %}
+                                         </a></li>
+                                {% endif %}
+                                {# Links Comuns (Todos logados) #}
+                                <li><a class="dropdown-item {% if request.endpoint == 'change_password' %}active{% endif %}" href="{{ url_for('change_password') }}"><i class="bi bi-key-fill me-2"></i>Alterar Senha</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                              </ul>
+                         </li>
+                     {# Usuário NÃO está logado #}
+                     {% else %}
+                          <li class="nav-item"><a class="nav-link {% if request.endpoint == 'login' %}active{% endif %}" href="{{ url_for('login') }}"><i class="bi bi-box-arrow-in-right me-1"></i> Login</a></li>
+                          <li class="nav-item"><a class="nav-link {% if request.endpoint == 'register' %}active{% endif %}" href="{{ url_for('register') }}"><i class="bi bi-person-plus-fill me-1"></i> Registrar</a></li>
+                     {% endif %} {# Fim if current_user.is_authenticated #}
+                 </ul> {# Fim menu direita #}
+            </div> {# Fim collapse #}
+        </div> {# Fim container-fluid #}
+    </nav>
+
+    {# --- Conteúdo Principal --- #}
+    <main class="container mt-4">
+        {# Container para mensagens flash (posicionado via CSS) #}
+        <div class="flash-message-container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                    {# Define a classe do alerta baseada na categoria flash #}
+                    {% set alert_class = 'alert-' + (category if category in ['primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark'] else 'info') %}
+                    <div class="alert {{ alert_class }} alert-dismissible fade show shadow-sm mb-2" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button> {# Botão fechar branco para contraste #}
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+
+        {# Bloco onde o conteúdo das páginas filhas será inserido #}
+        {% block content %}{% endblock %}
+    </main>
+
+    {# --- Rodapé --- #}
+    <footer class="mt-auto py-3"> {# mt-auto para empurrar para baixo #}
+        <div class="container text-center">
+            <span class="text-muted">&copy; {{ current_year }} Acessoria Jurídica</span>
+            <span class="text-muted mx-2">|</span>
+            <span class="text-muted">Desenvolvido por:
+                <a href="{{ url_for('developer_info') }}">Vitor Augusto de Lima dos Santos</a>
+            </span>
+        </div>
+    </footer>
+
+    {# --- Container para Toasts (Notificações) --- #}
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        {# Toasts serão adicionados aqui via JavaScript #}
+    </div>
+
+    {# --- Scripts JS --- #}
+    {# Bootstrap Bundle (inclui Popper) #}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    {# Bloco para scripts JS específicos da página filha #}
+    {% block scripts %}
+
+    {# Script para mostrar Toast de Nova Notificação (para Gestor/Acessor) #}
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Só roda para Gestor ou Acessor autenticados
+        {% if current_user.is_authenticated and (current_user.is_gestor or current_user.is_acessor) %}
+            const notifications_data = {{ recent_unread_notifications_data | default([]) | tojson | safe }};
+            const toastContainer = document.querySelector('.toast-container');
+
+            if (toastContainer && notifications_data && notifications_data.length > 0) {
+                const latestNotification = notifications_data[0];
+                const lastShownId = sessionStorage.getItem('lastShownNotificationId');
+
+                // Mostra toast apenas se ID for diferente do último mostrado NESTA SESSÃO do navegador
+                if (latestNotification && latestNotification.id && latestNotification.id.toString() !== lastShownId) {
+                    const creatorName = latestNotification.creator_name || 'Sistema';
+                    let messageDate = '?';
+                    try {
+                        // Formata a data de forma mais amigável
+                        const dateObj = new Date(latestNotification.created_at);
+                        const options = { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false };
+                        messageDate = dateObj.toLocaleString('pt-BR', options);
+                    } catch(e) { /* Ignora erro de data */ }
+
+                    // HTML do Toast (pode ser ajustado o estilo via style.css se necessário)
+                    const toastHTML = `
+                    <div class="toast text-bg-dark border-secondary" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
+                        <div class="toast-header text-bg-secondary">
+                            <i class="bi bi-bell-fill text-warning me-2"></i>
+                            <strong class="me-auto">Nova Notificação</strong>
+                            <small>${messageDate}</small>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                        <div class="toast-body">
+                            ${ latestNotification.message }
+                            <div class="mt-2 pt-2 border-top border-secondary">
+                                <small class="text-muted">Por: ${creatorName}</small>
+                            </div>
+                        </div>
+                    </div>`;
+
+                    toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+                    // Guarda o ID na sessionStorage para não mostrar de novo na mesma sessão
+                    sessionStorage.setItem('lastShownNotificationId', latestNotification.id.toString());
+                    const newToastEl = toastContainer.lastElementChild;
+                    if (newToastEl) {
+                        const toast = new bootstrap.Toast(newToastEl);
+                        toast.show(); // Mostra o toast
+                    }
+                }
+            }
+        {% endif %} {# Fim do if Gestor/Acessor #}
+    });
+    </script>
+    {% endblock scripts %} {# Fim do block scripts #}
+
+</body>
+</html>

@@ -1,0 +1,357 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalhes: {{ client.name }}{% endblock %}
+
+{% block content %}
+{# Cabeçalho com nome e botões voltar/excluir #}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h1>{{ client.name }}</h1>
+    <div> {# Agrupa botões da direita #}
+        {# Botão Excluir Cliente - VERMELHO #}
+        <form action="{{ url_for('delete_client', client_id=client.id) }}" method="POST" class="d-inline me-2"
+              onsubmit="return confirm('ATENÇÃO!\\n\\nDeseja realmente EXCLUIR PERMANENTEMENTE o cliente \'{{ client.name }}\'?\\n\\nTODOS os processos, prazos e documentos associados a este cliente também serão APAGADOS!\\n\\nEsta ação NÃO PODE ser desfeita.');">
+             {# CSRF Token OBRIGATÓRIO para POST #}
+             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+             <button type="submit" class="btn btn-danger" title="Excluir Cliente {{ client.name }} e TODOS os seus dados">
+                 <i class="bi bi-trash3-fill me-1"></i> Excluir Cliente
+             </button>
+        </form>
+
+        {# Botão Voltar #}
+        <a href="{{ url_for('client_list') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left-circle me-1"></i> Voltar para Lista
+        </a>
+    </div>
+</div>
+<hr>
+
+{# Abas de Navegação Bootstrap #}
+<ul class="nav nav-tabs mb-4" id="clientTab" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" id="dados-tab" data-bs-toggle="tab" data-bs-target="#dados-pane" type="button" role="tab" aria-controls="dados-pane" aria-selected="true">
+        <i class="bi bi-person-lines-fill me-1"></i>Dados Cadastrais
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="processos-tab" data-bs-toggle="tab" data-bs-target="#processos-pane" type="button" role="tab" aria-controls="processos-pane" aria-selected="false">
+        <i class="bi bi-folder2-open me-1"></i>Processos Ativos ({{ active_processes|length }})
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="documentos-tab" data-bs-toggle="tab" data-bs-target="#documentos-pane" type="button" role="tab" aria-controls="documentos-pane" aria-selected="false">
+       <i class="bi bi-file-earmark-text me-1"></i> Documentos ({{ documents|length }})
+    </button>
+  </li>
+</ul>
+
+{# Conteúdo das Abas #}
+<div class="tab-content" id="clientTabContent">
+
+  {# --- Aba Dados Cadastrais --- #}
+  <div class="tab-pane fade show active" id="dados-pane" role="tabpanel" aria-labelledby="dados-tab" tabindex="0">
+    <div class="card">
+        <div class="card-header">
+            <h4><i class="bi bi-pencil-square me-2"></i>Editar Dados Cadastrais</h4>
+        </div>
+        <div class="card-body">
+             {# Formulário manual para editar dados do cliente #}
+             <form method="POST" action="{{ url_for('client_detail', client_id=client.id) }}">
+                 {# CSRF Token ADICIONADO - ESSENCIAL pois é POST manual #}
+                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                 {# Campo oculto para identificar a ação no backend #}
+                 <input type="hidden" name="action" value="update_client">
+
+                 <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label for="edit-name" class="form-label">Nome Completo</label>
+                        <input type="text" class="form-control" id="edit-name" name="name" value="{{ client.name }}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="edit-cpf" class="form-label">CPF</label>
+                        {# CPF não editável aqui #}
+                        <input type="text" class="form-control" id="edit-cpf" name="cpf" value="{{ client.cpf }}" readonly disabled title="CPF não pode ser alterado">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="edit-phone" class="form-label">Telefone</label>
+                        <input type="tel" class="form-control" id="edit-phone" name="phone" value="{{ client.phone or '' }}">
+                    </div>
+                     <div class="col-md-6">
+                        <label for="edit-email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="edit-email" name="email" value="{{ client.email or '' }}">
+                    </div>
+                    <div class="col-12">
+                        <label for="edit-address" class="form-label">Endereço</label>
+                        <input type="text" class="form-control" id="edit-address" name="address" value="{{ client.address or '' }}">
+                    </div>
+                     <div class="col-md-6">
+                        <label for="edit-rg" class="form-label">RG</label>
+                        {# RG não editável aqui #}
+                        <input type="text" class="form-control" id="edit-rg" name="rg" value="{{ client.rg or '' }}" readonly disabled title="RG não pode ser alterado">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="edit-profession" class="form-label">Profissão</label>
+                        <input type="text" class="form-control" id="edit-profession" name="profession" value="{{ client.profession or '' }}">
+                    </div>
+                     <div class="col-12">
+                        <label for="edit-other_info" class="form-label">Outras Informações</label>
+                        <textarea class="form-control" id="edit-other_info" name="other_info" rows="3">{{ client.other_info or '' }}</textarea>
+                    </div>
+                 </div>
+                 <div class="text-end">
+                     <button type="submit" class="btn btn-success">
+                         <i class="bi bi-save me-1"></i> Salvar Alterações
+                     </button>
+                 </div>
+             </form>
+        </div>
+    </div>
+  </div>{# --- Fim Aba Dados Cadastrais --- #}
+
+
+  {# --- Aba Processos Ativos --- #}
+  <div class="tab-pane fade" id="processos-pane" role="tabpanel" aria-labelledby="processos-tab" tabindex="0">
+     {# Card para Adicionar Novo Processo #}
+     <div class="card mb-4">
+         <div class="card-header">
+             <h4><i class="bi bi-folder-plus me-2"></i>Incluir Novo Processo</h4>
+         </div>
+         <div class="card-body">
+             {# Formulário manual para adicionar processo #}
+             <form method="POST" action="{{ url_for('client_detail', client_id=client.id) }}">
+                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/> {# CSRF #}
+                 <input type="hidden" name="action" value="add_process">
+                 <div class="row g-3 mb-3 align-items-end">
+                     <div class="col-md-4">
+                         <label for="case_number" class="form-label">Nº do Processo (Opcional)</label>
+                         <input type="text" class="form-control" id="case_number" name="case_number">
+                     </div>
+                      <div class="col-md-5">
+                         <label for="process_description" class="form-label">Descrição / Objeto <span class="text-danger">*</span></label>
+                         <input type="text" class="form-control" id="process_description" name="process_description" required>
+                     </div>
+                     <div class="col-md-3">
+                         <button type="submit" class="btn btn-success w-100">
+                             <i class="bi bi-plus-lg me-1"></i> Incluir Processo
+                         </button>
+                     </div>
+                 </div>
+             </form>
+         </div>
+     </div>
+
+     <hr>
+     <h3 class="mb-3">Lista de Processos Ativos</h3>
+     {# Lista de Processos Ativos #}
+     {% if active_processes %}
+         {% for process in active_processes %}
+         <div class="card mb-3">
+             <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                 <h5 class="mb-0">
+                     <i class="bi bi-briefcase me-1"></i> Processo #{{ process.id }}
+                     {% if process.case_number %} | <small class="text-muted">Nº: {{ process.case_number }}</small>{% endif %}
+                 </h5>
+                  {# Formulário para Arquivar Processo #}
+                  <form action="{{ url_for('archive_process', process_id=process.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Tem certeza que deseja ARQUIVAR este processo? Verifique se não há prazos pendentes.');">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/> {# CSRF #}
+                      <button type="submit" class="btn btn-sm btn-warning" title="Arquivar Processo">
+                          <i class="bi bi-archive-fill me-1"></i> Arquivar
+                      </button>
+                  </form>
+             </div>
+             <div class="card-body">
+                 <p><strong>Descrição:</strong> {{ process.description }}</p>
+
+                 {# Andamentos do Processo #}
+                 <h6><i class="bi bi-body-text me-1"></i> Andamentos:</h6>
+                 {% if process.updates %}
+                     <pre class="bg-dark text-light p-2 rounded small">{{ process.updates }}</pre> {# Estilo para melhor leitura #}
+                 {% else %}
+                     <p class="text-muted fst-italic small">Nenhum andamento registrado.</p>
+                 {% endif %}
+                 {# Formulário para Adicionar Andamento #}
+                 <form method="POST" action="{{ url_for('client_detail', client_id=client.id) }}" class="mt-2 mb-3">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/> {# CSRF #}
+                    <input type="hidden" name="action" value="update_process">
+                    <input type="hidden" name="process_id" value="{{ process.id }}">
+                    <label for="update_text_{{ process.id }}" class="form-label visually-hidden">Registrar novo andamento</label>
+                    <div class="input-group">
+                        <textarea name="update_text" id="update_text_{{ process.id }}" class="form-control" rows="1" placeholder="Registrar novo andamento..." required></textarea>
+                        <button class="btn btn-primary" type="submit" title="Salvar Andamento">
+                            <i class="bi bi-send-plus"></i> Salvar
+                        </button>
+                    </div>
+                 </form>
+
+                 {# Prazos do Processo #}
+                 <h6><i class="bi bi-calendar-week me-1"></i> Prazos do Processo:</h6>
+                 {% set process_deadlines = process.deadlines|list %} {# Converte para lista para facilitar #}
+                 {% if process_deadlines %}
+                    <ul class="list-group list-group-flush mb-3">
+                    {% for deadline in process_deadlines %}
+                         {# Define classe de cor baseada no status/data #}
+                         {% set deadline_bg_class = '' %}
+                         {% if deadline.status == 'completed' %} {% set deadline_bg_class = 'list-group-item-secondary opacity-75' %} {# Mais opaco #}
+                         {% elif deadline.status == 'open' and deadline.due_date < today %} {% set deadline_bg_class = 'list-group-item-danger' %}
+                         {% elif deadline.status == 'open' and deadline.due_date == today %} {% set deadline_bg_class = 'list-group-item-warning' %}
+                         {% elif deadline.status == 'extended' %} {% set deadline_bg_class = 'list-group-item-info' %}
+                         {% endif %}
+
+                         <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2 {{ deadline_bg_class }}">
+                             {# Descrição e Data do Prazo #}
+                             <span {% if deadline.status == 'completed' %} class="text-decoration-line-through" {% endif %}>
+                                 <i class="bi bi-flag-fill me-1
+                                 {% if deadline.status == 'open' and deadline.due_date < today %} text-danger
+                                 {% elif deadline.status == 'open' and deadline.due_date == today %} text-warning text-dark
+                                 {% elif deadline.status == 'extended' %} text-info
+                                 {% endif %}"
+                                 ></i>
+                                 {{ deadline.description }} - Vence: <strong>{{ deadline.due_date.strftime('%d/%m/%Y') }}</strong>
+                                 <span class="badge rounded-pill {% if deadline.status == 'open' and deadline.due_date < today %} bg-danger {% elif deadline.status == 'open' and deadline.due_date == today %} bg-warning text-dark {% elif deadline.status == 'extended' %} bg-info {% else %} bg-secondary {% endif %} ms-1">{{ deadline.status|capitalize }}</span>
+                             </span>
+
+                             {# Ações do Prazo (Concluir / Prorrogar - desabilitado aqui) #}
+                             {% if deadline.status == 'open' or deadline.status == 'extended' %}
+                                <div class="btn-group btn-group-sm"> {# Grupo menor #}
+                                    {# Form para Concluir Prazo #}
+                                    <form action="{{ url_for('complete_deadline', deadline_id=deadline.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Marcar este prazo como concluído?')">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/> {# CSRF #}
+                                        <button type="submit" class="btn btn-xs btn-success" title="Baixar Prazo (Concluído)">
+                                            <i class="bi bi-check-circle-fill"></i>
+                                        </button>
+                                    </form>
+                                    {# Botão Prorrogar (Desabilitado - Ação na página /deadlines) #}
+                                    <button class="btn btn-xs btn-secondary" title="Prorrogar Prazo (Use a lista principal de Prazos)" disabled>
+                                        <i class="bi bi-clock-history"></i>
+                                    </button>
+                                </div>
+                             {% endif %}
+                         </li>
+                     {% endfor %}
+                    </ul>
+                 {% else %}
+                     <p class="text-muted fst-italic small">Nenhum prazo registrado para este processo.</p>
+                 {% endif %}
+
+                 {# Formulário para Adicionar Novo Prazo ao Processo #}
+                 <h6><i class="bi bi-calendar-plus me-1"></i> Adicionar Novo Prazo:</h6>
+                  <form method="POST" action="{{ url_for('client_detail', client_id=client.id) }}" class="mt-2">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/> {# CSRF #}
+                      <input type="hidden" name="action" value="add_deadline">
+                      <input type="hidden" name="process_id_for_deadline" value="{{ process.id }}">
+                      <div class="row g-2 align-items-end">
+                           <div class="col-sm-6">
+                               <label for="deadline_description_{{ process.id }}" class="form-label visually-hidden">Descrição do Prazo</label>
+                               <input type="text" class="form-control form-control-sm" id="deadline_description_{{ process.id }}" name="deadline_description" placeholder="Descrição do novo prazo *" required> {# Menor #}
+                           </div>
+                           <div class="col-sm-4">
+                               <label for="deadline_due_date_{{ process.id }}" class="form-label visually-hidden">Data Vencimento</label>
+                               <input type="date" class="form-control form-control-sm" id="deadline_due_date_{{ process.id }}" name="deadline_due_date" required> {# Menor #}
+                           </div>
+                            <div class="col-sm-2 d-grid">
+                               <button type="submit" class="btn btn-warning btn-sm w-100"> {# Menor #}
+                                   <i class="bi bi-calendar-plus me-1"></i> Add
+                               </button>
+                           </div>
+                      </div>
+                  </form>
+
+             </div> {# Fim card-body do processo #}
+         </div> {# Fim card do processo #}
+         {% endfor %}
+     {% else %}
+        <div class="alert alert-light" role="alert">
+          Nenhum processo ativo para este cliente. Use o formulário acima para incluir.
+        </div>
+     {% endif %}
+  </div> {# --- Fim Aba Processos Ativos --- #}
+
+
+  {# --- Aba Documentos --- #}
+  <div class="tab-pane fade" id="documentos-pane" role="tabpanel" aria-labelledby="documentos-tab" tabindex="0">
+     {# Card para Adicionar Link de Documento #}
+     <div class="card mb-4">
+         <div class="card-header">
+             <h4><i class="bi bi-link-45deg me-2"></i>Adicionar Link de Documento/Pasta</h4>
+         </div>
+         <div class="card-body">
+            {# Formulário manual para adicionar link #}
+            <form method="POST" action="{{ url_for('client_detail', client_id=client.id) }}">
+                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/> {# CSRF #}
+                 <input type="hidden" name="action" value="add_document">
+                 <div class="mb-3">
+                     <label for="document_filename" class="form-label">Nome/Descrição do Link (Opcional)</label>
+                     <input type="text" class="form-control" id="document_filename" name="document_filename" placeholder="Ex: Pasta Documentos Iniciais OneDrive">
+                 </div>
+                 <div class="mb-3">
+                     <label for="document_link" class="form-label">Link Compartilhável <span class="text-danger">*</span></label>
+                     <input type="url" class="form-control" id="document_link" name="document_link" placeholder="https://onedrive.live.com/..." required>
+                     <div class="form-text">Cole aqui o link compartilhado do OneDrive, Google Drive, etc.</div>
+                 </div>
+                 <div class="text-end">
+                    <button type="submit" class="btn btn-info"> {# Botão Roxo/Info #}
+                         <i class="bi bi-link-45deg me-1"></i> Adicionar Link
+                    </button>
+                 </div>
+            </form>
+         </div>
+     </div>
+
+     <hr>
+     <h3 class="mb-3">Lista de Documentos/Links Vinculados</h3>
+     {# Lista de Documentos/Links #}
+     {% if documents %}
+        <ul class="list-group">
+        {% for doc in documents %}
+            <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-1"> {# Reduzido gap #}
+                <div>
+                    <i class="bi bi-box-arrow-up-right me-2"></i>
+                    {# Link abre em nova aba #}
+                    <a href="{{ doc.storage_link }}" target="_blank" rel="noopener noreferrer" title="Abrir link em nova aba">{{ doc.filename }}</a>
+                    <br>
+                    <small class="text-muted ms-4"> (Adicionado em: {{ doc.upload_date.strftime('%d/%m/%Y %H:%M') }})</small>
+                </div>
+                {# Botão excluir comentado - Implementar rota e permissão se necessário #}
+                {# <form action="{{ url_for('delete_document', doc_id=doc.id) }}" method="POST" class="d-inline mt-1 mt-md-0" onsubmit="return confirm('Tem certeza que deseja excluir este link?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir Link"><i class="bi bi-trash3-fill"></i></button>
+                </form> #}
+            </li>
+        {% endfor %}
+        </ul>
+     {% else %}
+         <div class="alert alert-light" role="alert">
+           Nenhum documento ou link vinculado a este cliente. Use o formulário acima para adicionar.
+         </div>
+     {% endif %}
+  </div> {# --- Fim Aba Documentos --- #}
+
+</div> {# Fim Tab Content #}
+
+{% endblock %}
+
+{% block scripts %}
+{# Script JS para ativar a aba correta via hash na URL (ex: #processos-pane) #}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var hash = window.location.hash;
+        if (hash) {
+            // Tenta encontrar o botão da aba que corresponde ao hash
+            var triggerEl = document.querySelector('#clientTab button[data-bs-target="' + hash + '"]');
+            if (triggerEl) {
+                 try {
+                     // Usa a API do Bootstrap para mostrar a aba programaticamente
+                     var trigger = new bootstrap.Tab(triggerEl);
+                     trigger.show();
+                 } catch (e) {
+                     console.error("Erro ao ativar aba via hash:", e); // Loga erro se falhar
+                 }
+            }
+        }
+        // Adicional: garantir que o primeiro formulário visível não tenha foco automático que puxe a tela pra baixo
+        const firstInput = document.querySelector('.tab-pane.active input:not([type=hidden]), .tab-pane.active textarea, .tab-pane.active button');
+        if (firstInput) {
+            // Não define foco, apenas garante que a aba esteja visível
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6 col-lg-4">
+        {# Card para agrupar o formulário #}
+        <div class="card shadow">
+            <div class="card-header text-center">
+                <h2>Login</h2>
+            </div>
+            <div class="card-body">
+                {# Formulário de login, usa o objeto 'form' passado pela rota Flask #}
+                <form method="POST" action="{{ url_for('login') }}" novalidate>
+                    {# Renderiza o campo CSRF oculto - ESSENCIAL para segurança #}
+                    {{ form.hidden_tag() }}
+
+                    {# Campo Email #}
+                    <div class="mb-3">
+                        {{ form.email.label(class="form-label") }}
+                        {% if form.email.errors %}
+                            {# Adiciona classe 'is-invalid' se houver erros #}
+                            {{ form.email(class="form-control is-invalid") }}
+                            {# Exibe mensagens de erro #}
+                            <div class="invalid-feedback">
+                                {% for error in form.email.errors %}<span>{{ error }}</span>{% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.email(class="form-control", placeholder="seuemail@exemplo.com") }}
+                        {% endif %}
+                    </div>
+
+                    {# Campo Senha #}
+                    <div class="mb-3">
+                        {{ form.password.label(class="form-label") }}
+                        {% if form.password.errors %}
+                            {{ form.password(class="form-control is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.password.errors %}<span>{{ error }}</span>{% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.password(class="form-control", placeholder="Sua senha") }}
+                        {% endif %}
+                    </div>
+
+                    {# Botão de Submissão #}
+                    <div class="d-grid">
+                         {{ form.submit(class="btn btn-primary btn-lg") }}
+                    </div>
+                </form>
+            </div>
+            {# Link para a página de registro #}
+            <div class="card-footer text-center text-muted">
+                Não tem uma conta? <a href="{{ url_for('register') }}">Registre-se</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

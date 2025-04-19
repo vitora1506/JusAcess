@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-header text-center">
+                <h2><i class="bi bi-briefcase-fill me-1"></i>Selecionar Advogado</h2>
+            </div>
+            <div class="card-body">
+                <p class="text-center">Você está associado a múltiplos advogados. Por favor, selecione qual deles você deseja acessar no momento.</p>
+                {# Formulário POST para selecionar o advogado #}
+                <form method="POST" action="{{ url_for('select_lawyer_for_acessor') }}">
+                     {# CSRF Token OBRIGATÓRIO #}
+                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                     {# Lista de opções (radio buttons) #}
+                     <div class="list-group">
+                         {% for lawyer in assisted_lawyers %}
+                             {# Cada item é um label contendo um radio button #}
+                             <label class="list-group-item list-group-item-action">
+                                 <input class="form-check-input me-2" type="radio" name="lawyer_id" value="{{ lawyer.id }}" id="lawyer_{{ lawyer.id }}" required>
+                                 {{ lawyer.name }}
+                             </label>
+                         {% endfor %}
+                     </div>
+                     {# Botão Submit #}
+                     <div class="d-grid mt-4">
+                         <button type="submit" class="btn btn-primary btn-lg">Acessar Dados</button>
+                     </div>
+                </form>
+            </div>
+            {# Botão de Logout no rodapé #}
+            <div class="card-footer text-center">
+                 <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-secondary">Sair</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

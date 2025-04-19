@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+{# Títulos #}
+<h1 class="mb-1">Associar Advogados</h1>
+<h2 class="h4 text-muted mb-4">Para o Acessor: {{ user.username }}</h2>
+
+{# Descrição #}
+<p class="text-muted">Selecione abaixo a quais perfis de advogado/escritório este acessor terá permissão para visualizar e gerenciar dados.</p>
+
+{# Formulário usa o objeto 'form' (AssignLawyersToAcessorForm) #}
+<form method="POST" action="{{ url_for('manage_acessor_assignments', user_id=user.id) }}" novalidate>
+    {{ form.hidden_tag() }} {# CSRF #}
+
+    <div class="card shadow-sm"> {# Adicionado shadow #}
+        <div class="card-header">
+             {{ form.lawyers.label(class="fw-bold") }} {# Label principal do campo #}
+        </div>
+        <div class="card-body">
+            {# Verifica se há advogados para selecionar #}
+            {% if form.lawyers.choices %}
+                {# Grid para os checkboxes #}
+                <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+                    {# Loop sobre as opções (cada subfield é um checkbox + label) #}
+                    {% for subfield in form.lawyers %}
+                        <div class="col">
+                            <div class="form-check"> {# Removido form-check-inline para melhor espaçamento vertical #}
+                                {{ subfield(class="form-check-input") }} {# Renderiza <input type="checkbox"> #}
+                                {{ subfield.label(class="form-check-label") }} {# Renderiza <label> com o nome do advogado #}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                 {# Exibe erros de validação para o campo, se houver #}
+                 {% if form.lawyers.errors %}
+                    <div class="invalid-feedback d-block mt-3">
+                         {% for error in form.lawyers.errors %}<span>{{ error }}</span>{% endfor %}
+                    </div>
+                 {% endif %}
+            {% else %}
+                {# Mensagem se não houver perfis de advogado cadastrados #}
+                <p class="text-muted fst-italic">Nenhum perfil de advogado cadastrado para associar.</p>
+            {% endif %}
+        </div>
+        {# Rodapé do Card com botões #}
+        <div class="card-footer text-end">
+             <a href="{{ url_for('manage_users') }}" class="btn btn-secondary me-2">
+                <i class="bi bi-x-circle me-1"></i> Cancelar / Voltar
+             </a>
+             {# Renderiza o botão submit do WTForms #}
+             {{ form.submit(class="btn btn-success") }} {# Texto do botão vem do form #}
+        </div>
+    </div>
+</form>
+{% endblock %}
